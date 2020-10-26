@@ -62,4 +62,3 @@ if __name__ == "__main__":
     print(taylor_v(0, (3.*h + h/2, 5.*h), Re), '\n')
     
     print("taylor <<<")
-    
