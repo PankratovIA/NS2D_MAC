@@ -32,7 +32,7 @@ def F(j, k, u, v):
     ans += (u[j][k-1] - 2 * u[j][k] + u[j][k+1]) / (Re * (h ** 2)) # dy**2
     
     # u^2
-    u_sqr = (u[j][k] + u[j+1][k]) ** 2) / 4.0
+    u_sqr = ((u[j][k] + u[j+1][k]) ** 2) / 4.0
     u_sqr -= ((u[j-1][k] + u[j][k]) ** 2) / 4.0
     ans -= u_sqr / h
     
@@ -41,11 +41,31 @@ def F(j, k, u, v):
     uv -= 0.25 * (u[j][k-1] + u[j][k]) * (v[j+1][k-1] + v[j][k-1])
     ans -= uv / h
     
-    ans *= dt
+    ans *= tau
     ans += u[j][k]
     return ans
     
-def genMatrP(t, x, y):
+def G(j, k, u, v):
+    # G_{j, k+1/2}
+    # u[j][k] = u_{j+1/2, k}; v[j][k] = v_{j, k+1/2}; p[j][k] = p_{j, k}
+    ans = (v[j+1][k] - 2 * v[j][k] + v[j-1][k]) / (Re * (h ** 2)) # dx**2
+    ans += (v[j][k+1] - 2 * v[j][k] + v[j][k-1]) / (Re * (h ** 2)) # dy**2
+
+    # uv
+    uv = 0.25 * (u[j][k] + u[j][k+1]) * (v[j+1][k] + v[j][k])
+    uv -= 0.25 * (u[j-1][k] + u[j-1][k+1]) * (v[j][k] + v[j-1][k])
+    ans -= uv / h
+
+    # v^2
+    v_sqr = ((v[j][k] + v[j][k+1]) ** 2) / 4.0
+    v_sqr -= ((v[j][k-1] + v[j][k]) ** 2) / 4.0
+    ans -= v_sqr / h
+  
+    ans *= tau
+    ans += v[j][k]
+    return ans
+    
+def genMatrP(t, x, y, u, v):
     A = np.zeros((size, size))
     b = np.zeros((size, 1))
     for cur in range(cnt):
@@ -85,10 +105,15 @@ def genMatrP(t, x, y):
             A[row][col] += 1.0
             col = num(j, k+1, cnt)
             A[row][col] += 1.0
+            
+            b[row] = F(j, k, u, v) - F(j-1, k, u, v)
+            b[row] += G(j, k, u, v) - G(j, k-1, u, v)
+            b[row] *= h/tau
     print(A)
     print(b)
     
     print(A[12])
+    print(b[12])
     
 if __name__ == "__main__":
     print("taylor >>>")
@@ -132,6 +157,6 @@ if __name__ == "__main__":
     print(taylor_v(0, (3.*h + h/2, 5.*h)), '\n')
     print("p, u, v t=0 <<<")
     
-    genMatrP(t, p_x, p_y)
+    genMatrP(t, p_x, p_y, u, v)
     
     print("taylor <<<")
