@@ -26,6 +26,7 @@ def num(row, col, cnt):
     return row * cnt + col
 
 def F(j, k, u, v):
+    
     # F_{j+1/2, k}
     # u[j][k] = u_{j+1/2, k}; v[j][k] = v_{j, k+1/2}; p[j][k] = p_{j, k}
     ans = (u[j+1][k] - 2 * u[j][k] + u[j-1][k]) / (Re * (h ** 2)) # dx**2
@@ -74,19 +75,19 @@ def genBC(t, x, y, func):
             #bottom
             idx = num(0 + tmp, col, cnt)
             A[idx][idx] = 1.0
-            b[idx] = func(t, (x[col], y[0]))
+            b[idx] = func(t, (x[col], y[0 + tmp]))
             #top
             idx = num(cnt - 1 - tmp, col, cnt)
             A[idx][idx] = 1.0
-            b[idx] = func(t, (x[col], y[cnt - 1]))
+            b[idx] = func(t, (x[col], y[cnt - 1 - tmp]))
             #left
             idx = num(row, 0 + tmp, cnt)
             A[idx][idx] = 1.0
-            b[idx] = func(t, (x[0], y[row]))
+            b[idx] = func(t, (x[0 + tmp], y[row]))
             #right
             idx = num(row, cnt - 1 - tmp, cnt)
             A[idx][idx] = 1.0
-            b[idx] = func(t, (x[cnt - 1], y[row]))
+            b[idx] = func(t, (x[cnt - 1 - tmp], y[row]))
     return A, b
     
 def genMatrP(t, x, y, u, v):
@@ -166,6 +167,65 @@ if __name__ == "__main__":
     p1 = np.linalg.solve(Ap, bp)
     print(p1, p1[12])
     
+    print("p(0)")
+    for row in p:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+        
+    print()
+
+    p1 = p1.reshape((cnt, cnt))
+    for row in p1:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+    
+    print("p(0, (2.5*h, 2.5*h)) =", taylor_p(0, (2.5*h, 2.5*h)))
+    print("p(tau, (2.5*h, 2.5*h)) =", taylor_p(tau, (2.5*h, 2.5*h)), '\n')
+    
+    print("u(0)")
+    for row in u:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+
+    _, u1 = genBC(t, u_x, u_y, taylor_u)
+    u1 = u1.reshape((cnt, cnt))
+    for row in u1:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+    
+    # u[j][k] = u_{j+1/2, k}; v[j][k] = v_{j, k+1/2}; p[j][k] = p_{j, k}
+    for j in range(2, cnt-2):
+        for k in range(2, cnt-2):
+            u1[j][k] = F(j, k, u, v) - tau * (p1[j+1][k] - p1[j][k]) / h      
+
+    for row in u1:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+    
+    print("u(tau, (3*h, 2.5*h)) =", taylor_u(tau, (3*h, 2.5*h)), '\n')
+
+    print("v(0)")
+    for row in v:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+
+    _, v1 = genBC(t, v_x, v_y, taylor_v)
+    v1 = v1.reshape((cnt, cnt))
+    for row in v1:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+
+    # u[j][k] = u_{j+1/2, k}; v[j][k] = v_{j, k+1/2}; p[j][k] = p_{j, k}
+    for j in range(2, cnt-2):
+        for k in range(2, cnt-2):
+            v1[j][k] = G(j, k, u, v) - tau * (p1[j][k+1] - p1[j][k]) / h      
+
+    for row in v1:
+        print(" ".join(["{0:7.4f}".format(cur)  for cur in row]))
+    print()
+    
+    print("v(tau, (2.5*h, 3*h)) =", taylor_v(tau, (2.5*h, 3*h)), '\n')
+    print(v1[2][2])
+    
+
     
     print("taylor <<<")
-
