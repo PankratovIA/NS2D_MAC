@@ -65,30 +65,33 @@ def G(j, k, u, v):
     ans += v[j][k]
     return ans
     
-def genMatrP(t, x, y, u, v):
+def genBC(t, x, y, func):
     A = np.zeros((size, size))
     b = np.zeros((size, 1))
     for cur in range(cnt):
-        col = cur
+        col, row = cur, cur
         for tmp in range(2):
             #bottom
             idx = num(0 + tmp, col, cnt)
             A[idx][idx] = 1.0
-            b[idx] = taylor_p(t, (x[col], y[0]))
+            b[idx] = func(t, (x[col], y[0]))
             #top
             idx = num(cnt - 1 - tmp, col, cnt)
             A[idx][idx] = 1.0
-            b[idx] = taylor_p(t, (x[col], y[cnt - 1]))
-            row = cur
+            b[idx] = func(t, (x[col], y[cnt - 1]))
             #left
             idx = num(row, 0 + tmp, cnt)
             A[idx][idx] = 1.0
-            b[idx] = taylor_p(t, (x[0], y[row]))
+            b[idx] = func(t, (x[0], y[row]))
             #right
             idx = num(row, cnt - 1 - tmp, cnt)
             A[idx][idx] = 1.0
-            b[idx] = taylor_p(t, (x[cnt - 1], y[row]))
-     
+            b[idx] = func(t, (x[cnt - 1], y[row]))
+    return A, b
+    
+def genMatrP(t, x, y, u, v):
+    A, b = genBC(t, x, y, taylor_p)
+
     for j in range(2, cnt-2):
         for k in range(2, cnt-2):
             row = num(j, k, cnt)   
@@ -109,11 +112,12 @@ def genMatrP(t, x, y, u, v):
             b[row] = F(j, k, u, v) - F(j-1, k, u, v)
             b[row] += G(j, k, u, v) - G(j, k-1, u, v)
             b[row] *= h/tau
-    print(A)
-    print(b)
+    # print(A)
+    # print(b)
     
     print(A[12])
     print(b[12])
+    return A, b
     
 if __name__ == "__main__":
     print("taylor >>>")
@@ -157,6 +161,11 @@ if __name__ == "__main__":
     print(taylor_v(0, (3.*h + h/2, 5.*h)), '\n')
     print("p, u, v t=0 <<<")
     
-    genMatrP(t, p_x, p_y, u, v)
+    Ap, bp = genMatrP(t, p_x, p_y, u, v)
+    print("p det = ", np.linalg.det(Ap))
+    p1 = np.linalg.solve(Ap, bp)
+    print(p1, p1[12])
+    
     
     print("taylor <<<")
+
