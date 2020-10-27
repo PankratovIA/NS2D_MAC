@@ -24,6 +24,26 @@ def taylor_p(t, X):
     
 def num(row, col, cnt):
     return row * cnt + col
+
+def F(j, k, u, v):
+    # F_{j+1/2, k}
+    # u[j][k] = u_{j+1/2, k}; v[j][k] = v_{j, k+1/2}; p[j][k] = p_{j, k}
+    ans = (u[j+1][k] - 2 * u[j][k] + u[j-1][k]) / (Re * (h ** 2)) # dx**2
+    ans += (u[j][k-1] - 2 * u[j][k] + u[j][k+1]) / (Re * (h ** 2)) # dy**2
+    
+    # u^2
+    u_sqr = (u[j][k] + u[j+1][k]) ** 2) / 4.0
+    u_sqr -= ((u[j-1][k] + u[j][k]) ** 2) / 4.0
+    ans -= u_sqr / h
+    
+    # uv
+    uv = 0.25 * (u[j][k] + u[j][k+1]) * (v[j+1][k] + v[j][k])
+    uv -= 0.25 * (u[j][k-1] + u[j][k]) * (v[j+1][k-1] + v[j][k-1])
+    ans -= uv / h
+    
+    ans *= dt
+    ans += u[j][k]
+    return ans
     
 def genMatrP(t, x, y):
     A = np.zeros((size, size))
